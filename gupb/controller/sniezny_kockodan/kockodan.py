@@ -16,6 +16,8 @@ from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.finder.a_star import AStarFinder
 from gupb.scripts import arena_generator
 
+import bandit
+
 POSSIBLE_ACTIONS = [
     characters.Action.TURN_LEFT,
     characters.Action.TURN_RIGHT,
@@ -86,11 +88,14 @@ class SnieznyKockodanController(controller.Controller):
         self.random_walk_destination: (coordinates.Coords, None) = None
         self.arena: (list[list[int]], None) = None
         # self.arcade_weapon: bool = True
-        self.menhir_movement_counter: int = MENHIR_MOVEMENT_COUNTER_INIT
+        # self.menhir_movement_counter: int = MENHIR_MOVEMENT_COUNTER_INIT
         self.prev_champions: int = CHAMPIONS_COUNT
         self.escape_destination: (coordinates.Coords, None) = None
         self.escape_counter: int = 0
         # self.arcade_weapon: bool = True
+
+        self.bandit: bandit.Bandit = bandit.Bandit()
+        self.menhir_movement_counter: int = self.bandit.current_tactics['menhir_movement_count']
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, SnieznyKockodanController):
@@ -196,7 +201,7 @@ class SnieznyKockodanController(controller.Controller):
             return self.random_decision()
 
     def praise(self, score: int) -> None:
-        pass
+        self.bandit.choose_tactics()
 
     def reset(self, arena_description: arenas.ArenaDescription) -> None:
         self.menhir = None
@@ -213,11 +218,12 @@ class SnieznyKockodanController(controller.Controller):
         self.turn_counter = TURN_INIT
         self.random_walk_counter = RANDOM_WALK_INIT
         self.random_walk_destination = None
-        self.menhir_movement_counter = MENHIR_MOVEMENT_COUNTER_INIT
+        # self.menhir_movement_counter = MENHIR_MOVEMENT_COUNTER_INIT
         self.prev_champions = CHAMPIONS_COUNT
         self.escape_destination: (coordinates.Coords, None) = None
         self.escape_counter: int = 0
         # self.arcade_weapon = True
+        self.menhir_movement_counter = self.bandit.current_tactics['menhir_movement_count']
 
     @property
     def name(self) -> str:
@@ -305,7 +311,7 @@ class SnieznyKockodanController(controller.Controller):
 
         health = champion_info.health
         enemy_stronger_health = [knowledge.visible_tiles[enemy].character.health > health for enemy in enemies]
-        if any(enemy_stronger_health):
+        if any(enemy_stronger_health) and not self.bandit.current_tactics['attack_pass']:
             return False
         # if health < HEALTH_ATTACK_THRESHOLD * MAX_HEALTH:
         #     return False
@@ -314,7 +320,7 @@ class SnieznyKockodanController(controller.Controller):
         enemy_stronger_weapons = [WEAPON_RANKING[knowledge.visible_tiles[enemy].character.weapon.name]
                                   > WEAPON_RANKING[weapon]
                                   for enemy in enemies]
-        if any(enemy_stronger_weapons):
+        if any(enemy_stronger_weapons) and not self.bandit.current_tactics['attack_pass']:
             return False
         try:
             weapon_coordinates = WEAPON_DICT[weapon].cut_positions(self.terrain, knowledge.position, facing)
