@@ -1,7 +1,7 @@
 from enum import Enum
 import random
-import kockodan
 
+MENHIR_MOVEMENT_COUNTER_INIT: int = 50
 
 EPSILON = 0.1
 
@@ -9,15 +9,15 @@ EPSILON = 0.1
 class Tactics(Enum):
     ATTACKER = {
         'attack_pass': True,
-        'menhir_movement_count': kockodan.MENHIR_MOVEMENT_COUNTER_INIT
-    },
+        'menhir_movement_count': MENHIR_MOVEMENT_COUNTER_INIT
+    }
     FAST_MENHIR = {
         'attack_pass': False,
         'menhir_movement_count': 0
-    },
+    }
     CLASSIC = {
         'attack_pass': False,
-        'menhir_movement_count': kockodan.MENHIR_MOVEMENT_COUNTER_INIT
+        'menhir_movement_count': MENHIR_MOVEMENT_COUNTER_INIT
     }
 
 

@@ -16,7 +16,7 @@ from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.finder.a_star import AStarFinder
 from gupb.scripts import arena_generator
 
-import bandit
+from gupb.controller.sniezny_kockodan import bandit
 
 POSSIBLE_ACTIONS = [
     characters.Action.TURN_LEFT,
@@ -55,7 +55,7 @@ MAX_WEAPON_PATH_LEN: int = 10
 TURN_INIT: int = 3
 RANDOM_WALK_INIT: int = 2
 
-MENHIR_MOVEMENT_COUNTER_INIT: int = 50
+MENHIR_MOVEMENT_COUNTER_INIT: int = bandit.MENHIR_MOVEMENT_COUNTER_INIT
 CHAMPIONS_COUNT: int = 13
 
 EUCLIDEAN_MAX_RADIUS: int = 5
@@ -95,7 +95,7 @@ class SnieznyKockodanController(controller.Controller):
         # self.arcade_weapon: bool = True
 
         self.bandit: bandit.Bandit = bandit.Bandit()
-        self.menhir_movement_counter: int = self.bandit.current_tactics['menhir_movement_count']
+        self.menhir_movement_counter: int = self.bandit.current_tactics.value['menhir_movement_count']
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, SnieznyKockodanController):
@@ -223,7 +223,7 @@ class SnieznyKockodanController(controller.Controller):
         self.escape_destination: (coordinates.Coords, None) = None
         self.escape_counter: int = 0
         # self.arcade_weapon = True
-        self.menhir_movement_counter = self.bandit.current_tactics['menhir_movement_count']
+        self.menhir_movement_counter = self.bandit.current_tactics.value['menhir_movement_count']
 
     @property
     def name(self) -> str:
@@ -311,7 +311,7 @@ class SnieznyKockodanController(controller.Controller):
 
         health = champion_info.health
         enemy_stronger_health = [knowledge.visible_tiles[enemy].character.health > health for enemy in enemies]
-        if any(enemy_stronger_health) and not self.bandit.current_tactics['attack_pass']:
+        if any(enemy_stronger_health) and not self.bandit.current_tactics.value['attack_pass']:
             return False
         # if health < HEALTH_ATTACK_THRESHOLD * MAX_HEALTH:
         #     return False
@@ -320,7 +320,7 @@ class SnieznyKockodanController(controller.Controller):
         enemy_stronger_weapons = [WEAPON_RANKING[knowledge.visible_tiles[enemy].character.weapon.name]
                                   > WEAPON_RANKING[weapon]
                                   for enemy in enemies]
-        if any(enemy_stronger_weapons) and not self.bandit.current_tactics['attack_pass']:
+        if any(enemy_stronger_weapons) and not self.bandit.current_tactics.value['attack_pass']:
             return False
         try:
             weapon_coordinates = WEAPON_DICT[weapon].cut_positions(self.terrain, knowledge.position, facing)
