@@ -1,9 +1,10 @@
 from enum import Enum
 import random
+import time
 
 MENHIR_MOVEMENT_COUNTER_INIT: int = 50
 
-EPSILON = 0.1
+EPSILON = 0.15
 
 
 class Tactics(Enum):
@@ -41,6 +42,9 @@ class Bandit:
 
         self.current_tactics: Tactics = random.choice(POSSIBLE_TACTICS)
         self.searching_index: float = EPSILON
+        self.log_path = "bandit_log" + time.strftime("%Y_%m_%d_%H_%M_%S") + ".log"
+
+        self.log_tactics()
 
     def choose_tactics(self) -> None:
         if self.searching_index > random.random():
@@ -48,7 +52,15 @@ class Bandit:
         else:
             self.current_tactics = max(self.q, key=self.q.get)
 
+        self.log_tactics()
+
     def update_tables(self, reward: int) -> None:
         self.n[self.current_tactics] += 1
         self.q[self.current_tactics] += 1 / self.n[self.current_tactics] * (reward - self.q[self.current_tactics])
         self.choose_tactics()
+
+    def log_tactics(self):
+        with open(self.log_path, "a+") as logs:
+            logs.write(str(self.current_tactics) + "\n")
+
+
