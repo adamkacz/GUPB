@@ -201,7 +201,7 @@ class SnieznyKockodanController(controller.Controller):
             return self.random_decision()
 
     def praise(self, score: int) -> None:
-        self.bandit.choose_tactics()
+        self.bandit.update_tables(score)
 
     def reset(self, arena_description: arenas.ArenaDescription) -> None:
         self.menhir = None
